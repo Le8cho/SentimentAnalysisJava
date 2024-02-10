@@ -2,15 +2,15 @@ package main;
 
 public class Token {
 
-    public Tipo tipo;
+    public TipoToken tipo;
     public String value;
 
-    public Token(Tipo tipo, String value) {
+    public Token(TipoToken tipo, String value) {
         this.tipo = tipo;
         this.value = value;
     }
 
-    enum Tipo {
+    enum TipoToken {
 
         SPAM_WORD,
  

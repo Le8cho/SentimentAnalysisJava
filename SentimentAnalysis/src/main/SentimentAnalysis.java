@@ -1,16 +1,19 @@
 package main;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import main.Token.Tipo;
+import main.Token.TipoToken;
 
 public class SentimentAnalysis {
 
-    private static String spamPattern = "\\b(?:gan(ar|aste)|grat(is|uito)|ofert(ón|on)|oportunidad|descuent(([a-zA-Z])*)|premi(([a-zA-Z])*)|promoci(ó|o)n|dinero|urgente|(u|ú)nic[oa]|regalo)\\b";
-    private static String negPattern = "\\b(?:conf(i)?es([a-zA-Z])*|no|nunca|jam(á|a)s|horrible|terribl(([a-zA-Z])*)|mal(([a-zA-Z])*)?|p(e|é)sim(o|a)|desagradable|odi([a-zA-Z])*|aborre(([a-zA-Z])*)|detest(([a-zA-Z])*)|lamentable|atroz|doloros(([a-zA-Z])*)|insatisfactori(o|a)|insufrible|infernal|espantos[oa]|insoportable)\\b";
-    private static String posPattern = "\\b(?:excelent(([a-zA-Z])*)|maravillos[oa]|fant(á|a)stic[oa]|incre[íi]ble|genial|buen[oa]|positiv[oa]|agradabl(([a-zA-Z])*)|feli(([a-zA-Z])*)|satisfactori[oa]|bien|perfect[oa]|mejor(([a-zA-Z])*)|encantad(or|ora)|notabl(([a-zA-Z])*)|admirabl(([a-zA-Z])*)|estupendo)\\b";
-    private static String stopPattern = "\\b(?:de|tras|la|que|el|en|y|a|los|se|del|las|un|por|con|una|su|para|es|al|lo|como|más|o|pero|sus|le|ha|me|si|sin|sobre|este|ya|entre|cuando|todo|esta|ser|son|dos|también|fue|había|era|muy|hasta|desde|está|nos|durante|ni|contra|otro|fuera|esos|eso|ante|unos|ellas|esto|mí|antes|algunos|qué|unos|les|nos|esos|esos|que|ellos|sus|entonces|quien|donde|porque|esto|hasta|entre|antes|durante)\\b";
+    private static String spamPattern = "\\b(?:gan(ar|aste)|grat(is|uito)|ofert(ón|on|a)|oportunidad|descuent(([a-z])*)|premi(([a-z])*)|promoci(ó|o)n|dinero|urgente|(u|ú)nic[oa]|regalo)\\b";
+    private static String negPattern = "\\b(?:conf(i)?es([a-z])*|no|nunca|jam(á|a)s|horrible|terribl(([a-z])*)|mal(([a-z])*)?|p(e|é)sim(o|a)|desagradable|odi([a-z])*|aborre(([a-z])*)|detest(([a-z])*)|lamentable|atroz|doloros(([a-z])*)|insatisfactori(o|a)|insufrible|infernal|espantos[oa]|insoportable|complicad[a-z]*|picad[oa])\\b";
+    private static String posPattern = "\\b(?:m[ée]ritos?|excelent(([a-z])*)|maravillos[oa]|fant(á|a)stic[oa]|incre[íi]ble|genial|buen[oa]?s?|positiv[oa]s?|agradabl(([a-z])*)|feli(([a-z])*)|satisfactori[oa]|bien|perfect[oa]|mejor(([a-z])*)|encantad(or|ora)|notabl(([a-z])*)|admirabl(([a-z])*)|estupendo|divertid[a-z]*)\\b";
+    private static String stopPattern = "\\b(?:de|tras|la|que|el|en|y|a|los|se|del|las|un|por|con|una|su|para|es|al|lo|como|más|o|pero|sus|le|hubo|ha|me|si|sin|sobre|este|ya|entre|cuando|todo|esta|ser|son|dos|también|fue|había|era|muy|hasta|desde|está|nos|durante|ni|contra|otro|fuera|esos|eso|ante|unos|ellas|esto|mí|antes|algunos|qué|unos|les|nos|esos|esos|que|ellos|sus|entonces|quien|donde|porque|esto|hasta|entre|antes|durante)\\b";
 
     //Creamos un array de arrays para la tabla de símbolos que guardaran los tokens
     public static ArrayList<ArrayList<Token>> tablaSimbolos = new ArrayList<>();
@@ -34,24 +37,43 @@ public class SentimentAnalysis {
     //Puntaje emocional en base a 100 donde 50 es neutro, debajo de 50 es negativo, debajo de 50 es positivo
     private static int puntajeEmocional = 50;
 
-    public static void main(String[] args) {
-        String input = "Confieso que el fichaje de Jovic no me generó muchas expectativas: el Milan estaba fichando nombres importantes, futbolistas con valor en el mercado tras la dolorosa salida de Tonali al Newcastle. Lo recaudado en el centrocampista italiano se invirtió en llegadas como las de Pulisic, Chukwueze, Loftus-Cheek, Reijnders, Yunus Musah, Okafor… y de repente, Luka Jovic. El mismo Jovic que había protagonizado un paso por el Madrid casi fantasmal tenía de nuevo una oportunidad en un grande de Europa. Hasta ahora no había dado señales de vida por San Siro, tan sólo se escuchaban algunos pasos en la lejanía, pero tras marcar en los dos últimos partidos, los aficionados ya ponen cara a ese fantasma que deambulaba por el banquillo rossonero hasta el punto de considerarlo una de las mejores noticias en un momento complicado para el equipo.";
+    public static void main(String[] args){
+        
+        System.setProperty("file.encoding", "UTF-8");
+        
+        String ruta = "textoPolaridad.txt";
 
+        StringBuilder stringBuilder = new StringBuilder();
+        
+        try {
+            BufferedReader lectorTexto = new BufferedReader(new FileReader(ruta,StandardCharsets.UTF_8));
+            String linea;
+            while( (linea = lectorTexto.readLine()) != null){
+                stringBuilder.append(linea).append("\n");
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        String input = stringBuilder.toString();
+        
         SentimentAnalysis.insertarArraysATabla();
 
-        System.out.println("Input original");
+        System.out.println("Texto original");
         System.out.println(input);
         System.out.println("");
 
-        SentimentAnalysis.searchWords(stopPattern, input, Tipo.STOP_WORD, tablaSimbolos);
-        SentimentAnalysis.searchWords(negPattern, input, Tipo.NEG_WORD, tablaSimbolos);
-        SentimentAnalysis.searchWords(posPattern, input, Tipo.POS_WORD, tablaSimbolos);
-        SentimentAnalysis.searchWords(spamPattern, input, Tipo.SPAM_WORD, tablaSimbolos);
+        SentimentAnalysis.searchWords(stopPattern, input, TipoToken.STOP_WORD, tablaSimbolos);
+        SentimentAnalysis.searchWords(negPattern, input, TipoToken.NEG_WORD, tablaSimbolos);
+        SentimentAnalysis.searchWords(posPattern, input, TipoToken.POS_WORD, tablaSimbolos);
+        SentimentAnalysis.searchWords(spamPattern, input, TipoToken.SPAM_WORD, tablaSimbolos);
+
 
         SentimentAnalysis.eliminateStopWords(input);
 
         SentimentAnalysis.mostrarTablaSimbolos(tablaSimbolos);
-        
+
         SentimentAnalysis.calcularPolaridadTexto();
 
     }
@@ -67,8 +89,7 @@ public class SentimentAnalysis {
         tablaSimbolos.add(stopWords);
     }
 
-    public static void searchWords(String wordPattern, String input, Token.Tipo wordCat, ArrayList<ArrayList<Token>> tablaSimbolos) {
-
+    public static void searchWords(String wordPattern, String input, Token.TipoToken wordCat, ArrayList<ArrayList<Token>> tablaSimbolos) {
         //Buscaremos las palabras para añadirlas a la tabla de simbolos
         //CASE_INSENSITIVE para que no distinga mayusculas y minusculas. UNICODE_CASE para que considere UNICODE y no solo ASCII
         Pattern p = Pattern.compile(wordPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -79,10 +100,12 @@ public class SentimentAnalysis {
             String wordValue = m.group();
             Token token = new Token(wordCat, wordValue);
             tablaSimbolos.get(wordArrayIndex).add(token);
+            
         }
+        
     }
 
-    public static int getWordArrayIndex(Token.Tipo wordCat) {
+    public static int getWordArrayIndex(Token.TipoToken wordCat) {
 
         int wordArrayIndex = -1;
 
@@ -102,13 +125,13 @@ public class SentimentAnalysis {
     }
 
     public static void eliminateStopWords(String input) {
-        //Eliminamos las stopWords de nuestro input y las reemplazamos con un empty string
+        
+        input = input.toLowerCase();
         input = input.replaceAll(stopPattern, "");
-        //Luego para formatar el input buscamos dos o mas espacios en blanco y lo reemplazos por uno solo
-        input = input.replaceAll("\\s{2,}", " ");
-        System.out.println("Input sin stop words");
+        input = input.replaceAll("\\s{2,}"," ");
+        
+        System.out.println("Input sin stopwords");
         System.out.println(input);
-        System.out.println("");
     }
 
     public static void mostrarTablaSimbolos(ArrayList<ArrayList<Token>> tablaSimbolos) {
@@ -121,13 +144,13 @@ public class SentimentAnalysis {
             System.out.println("");
         }
     }
-    
-    public static void calcularPolaridadTexto(){
-        
+
+    public static void calcularPolaridadTexto() {
+
         //Actualizamos el puntaje anteriormente inicializado en 50;
         puntajeEmocional = puntajeEmocional - negWords.size() + posWords.size();
-        
-        System.out.println("Puntaje emocional " + puntajeEmocional + "\nEste texto presenta una " +(puntajeEmocional==50?" Polaridad neutra": puntajeEmocional<50?" Polaridad negativa" : " Polaridad positiva") );
+
+        System.out.println("Puntaje emocional " + puntajeEmocional + "\nEste texto presenta una " + (puntajeEmocional == 50 ? " Polaridad neutra" : puntajeEmocional < 50 ? " Polaridad negativa" : " Polaridad positiva"));
     }
 
 }
